@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: GCC, os: ubuntu-latest, cxx: g++, sanitize: "OFF"}
+          - {name: Clang, os: ubuntu-latest, cxx: clang++, sanitize: "OFF"}
+          - {name: GCC ASan+UBSan, os: ubuntu-latest, cxx: g++, sanitize: "ON"}
+          - {name: macOS Clang, os: macos-latest, cxx: clang++, sanitize: "OFF"}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          -DCMAKE_BUILD_TYPE=${{ matrix.sanitize == 'ON' && 'Debug' || 'Release' }}
+          -DRUDP_SANITIZE=${{ matrix.sanitize }}
+          -DRUDP_WERROR=ON
+      - name: Build
+        run: cmake --build build -j 4
+      - name: Test
+        run: ctest --test-dir build --output-on-failure --timeout 300
+      - name: Selftest with 5% loss
+        run: ./build/rudp selftest --size-mb 4 --sim-loss 0.05 --sim-delay 2
