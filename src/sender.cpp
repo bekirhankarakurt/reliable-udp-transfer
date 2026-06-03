@@ -82,6 +82,7 @@ private:
         }
         digest_ = *digest;
         result_.stats.file_size = size;
+        result_.stats.chunk_size = chunk_;
         result_.stats.sha256 = to_hex(digest_);
         file_size_ = size;
         slots_.assign(total_, Slot{});

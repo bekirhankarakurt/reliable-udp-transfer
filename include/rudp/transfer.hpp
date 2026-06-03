@@ -42,6 +42,7 @@ struct SenderOptions {
 
 struct SenderStats {
     std::uint64_t file_size = 0;
+    std::uint32_t chunk_size = 0;
     std::uint32_t resumed_chunks = 0;  // chunks the receiver already had
     std::uint64_t data_packets = 0;    // including retransmissions
     std::uint64_t retransmits = 0;
