@@ -158,8 +158,8 @@ int main(int argc, char** argv) {
     make_file(dir / "big.bin", big);
     make_file(dir / "small.bin", small);
 
-    std::cout << "| Scenario                           |  MiB/s  | seconds | TCP model   |\n"
-              << "|------------------------------------|---------|---------|-------------|\n";
+    std::cout << "| Scenario                           |   MiB/s  | seconds | TCP model   |\n"
+              << "|------------------------------------|----------|---------|-------------|\n";
     row("TCP, loopback", big, bench_tcp(dir / "big.bin", big), "-");
     row("rudp, UDP loopback", big, bench_udp_loopback(dir / "big.bin", dir / "out"), "-");
 
