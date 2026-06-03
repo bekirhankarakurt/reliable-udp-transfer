@@ -152,9 +152,11 @@ double mib_per_second(std::uint64_t bytes, double seconds) {
 }
 
 void print_send_summary(const std::string& name, const rudp::SenderStats& st) {
+    const std::uint64_t skipped = std::min<std::uint64_t>(
+        static_cast<std::uint64_t>(st.resumed_chunks) * st.chunk_size, st.file_size);
     std::cout << "sent      " << name << "  " << rudp::format_bytes(static_cast<double>(st.file_size))
               << "  in " << std::fixed << std::setprecision(2) << st.duration_s << " s  ("
-              << std::setprecision(1) << mib_per_second(st.file_size, st.duration_s) << " MiB/s)\n"
+              << std::setprecision(1) << mib_per_second(st.file_size - skipped, st.duration_s) << " MiB/s)\n"
               << "          packets " << st.data_packets << "  retransmits " << st.retransmits
               << "  timeouts " << st.timeouts << "  fast-losses " << st.fast_losses << "  srtt "
               << std::setprecision(2) << st.srtt_ms << " ms";
