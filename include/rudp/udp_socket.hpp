@@ -28,9 +28,10 @@ public:
 
     [[nodiscard]] std::uint16_t local_port() const noexcept { return local_port_; }
 
-private:
+    // Takes ownership of an open UDP socket; prefer listen()/connect().
     UdpChannel(int fd, bool follow_sender) noexcept : fd_(fd), follow_sender_(follow_sender) {}
 
+private:
     int fd_;
     bool follow_sender_;
     bool has_peer_ = false;

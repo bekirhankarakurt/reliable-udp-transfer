@@ -57,7 +57,7 @@ std::unique_ptr<UdpChannel> UdpChannel::listen(std::uint16_t port, std::string& 
         ::close(fd);
         return nullptr;
     }
-    std::unique_ptr<UdpChannel> channel(new UdpChannel(fd, true));
+    auto channel = std::make_unique<UdpChannel>(fd, true);
     channel->local_port_ = ntohs(bound.sin_port);
     return channel;
 }
@@ -78,7 +78,7 @@ std::unique_ptr<UdpChannel> UdpChannel::connect(const std::string& host, std::ui
         ::freeaddrinfo(result);
         return nullptr;
     }
-    std::unique_ptr<UdpChannel> channel(new UdpChannel(fd, false));
+    auto channel = std::make_unique<UdpChannel>(fd, false);
     std::memcpy(&channel->peer_, result->ai_addr, result->ai_addrlen);
     channel->peer_length_ = static_cast<socklen_t>(result->ai_addrlen);
     channel->has_peer_ = true;
