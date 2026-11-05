@@ -3,6 +3,7 @@
 Reliable, integrity-checked file transfer over plain UDP in C++17: sliding window, selective ACK, adaptive retransmission, AIMD congestion control and resume - with a built-in loss/latency simulator so you can test it without root or `tc`.
 
 [![CI](https://github.com/bekirhankarakurt/reliable-udp-transfer/actions/workflows/ci.yml/badge.svg)](https://github.com/bekirhankarakurt/reliable-udp-transfer/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/bekirhankarakurt/reliable-udp-transfer)](https://github.com/bekirhankarakurt/reliable-udp-transfer/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C.svg)
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey.svg)
