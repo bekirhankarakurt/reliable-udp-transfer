@@ -1,6 +1,8 @@
 #include "rudp/udp_socket.hpp"
 
+#include <algorithm>
 #include <cerrno>
+#include <chrono>
 #include <cstring>
 
 #include <arpa/inet.h>
@@ -26,6 +28,13 @@ int open_socket(std::string& error) {
     static_cast<void>(::setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &kSocketBufferBytes,
                                    sizeof(kSocketBufferBytes)));
     return fd;
+}
+
+bool same_endpoint(const sockaddr_storage& a, const sockaddr_storage& b) {
+    if (a.ss_family != AF_INET || b.ss_family != AF_INET) return false;
+    const auto& x = reinterpret_cast<const sockaddr_in&>(a);
+    const auto& y = reinterpret_cast<const sockaddr_in&>(b);
+    return x.sin_addr.s_addr == y.sin_addr.s_addr && x.sin_port == y.sin_port;
 }
 
 }  // namespace
@@ -94,25 +103,36 @@ void UdpChannel::send(const Datagram& datagram) {
                                reinterpret_cast<const sockaddr*>(&peer_), peer_length_));
 }
 
+void UdpChannel::lock_peer() {
+    if (has_peer_) follow_sender_ = false;
+}
+
 std::optional<Datagram> UdpChannel::receive(Micros timeout) {
-    const auto millis = (timeout.count() + 999) / 1000;  // round up so short waits still block
-    pollfd descriptor{fd_, POLLIN, 0};
-    if (::poll(&descriptor, 1, static_cast<int>(millis)) <= 0 || (descriptor.revents & POLLIN) == 0) {
-        return std::nullopt;
+    using Clock = std::chrono::steady_clock;
+    const auto deadline = Clock::now() + timeout;
+    for (;;) {
+        const auto left = std::chrono::duration_cast<Micros>(deadline - Clock::now());
+        const auto millis = std::max<Micros::rep>(0, (left.count() + 999) / 1000);  // round up so short waits still block
+        pollfd descriptor{fd_, POLLIN, 0};
+        if (::poll(&descriptor, 1, static_cast<int>(millis)) <= 0 || (descriptor.revents & POLLIN) == 0) {
+            return std::nullopt;
+        }
+        sockaddr_storage from{};
+        socklen_t from_length = sizeof(from);
+        const ssize_t received = ::recvfrom(fd_, buffer_.data(), buffer_.size(), 0,
+                                            reinterpret_cast<sockaddr*>(&from), &from_length);
+        if (received < 0) {
+            return std::nullopt;
+        }
+        if (follow_sender_) {
+            peer_ = from;
+            peer_length_ = from_length;
+            has_peer_ = true;
+        } else if (has_peer_ && !same_endpoint(from, peer_)) {
+            continue;  // not our peer: drop it, like a lost packet
+        }
+        return Datagram(buffer_.begin(), buffer_.begin() + received);
     }
-    sockaddr_storage from{};
-    socklen_t from_length = sizeof(from);
-    const ssize_t received = ::recvfrom(fd_, buffer_.data(), buffer_.size(), 0,
-                                        reinterpret_cast<sockaddr*>(&from), &from_length);
-    if (received < 0) {
-        return std::nullopt;
-    }
-    if (follow_sender_) {
-        peer_ = from;
-        peer_length_ = from_length;
-        has_peer_ = true;
-    }
-    return Datagram(buffer_.begin(), buffer_.begin() + received);
 }
 
 }  // namespace rudp

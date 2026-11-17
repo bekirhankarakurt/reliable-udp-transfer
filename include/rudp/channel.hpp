@@ -26,6 +26,9 @@ public:
     virtual void send(const Datagram& datagram) = 0;
     // Waits up to `timeout` for one datagram.
     [[nodiscard]] virtual std::optional<Datagram> receive(Micros timeout) = 0;
+    // Pins the remote endpoint to the source of the last received datagram:
+    // later datagrams from anyone else are dropped. No-op for in-memory links.
+    virtual void lock_peer() {}
 };
 
 struct ImpairConfig {
@@ -48,6 +51,7 @@ public:
 
     void send(const Datagram& datagram) override;
     [[nodiscard]] std::optional<Datagram> receive(Micros timeout) override;
+    void lock_peer() override { inner_->lock_peer(); }
 
 private:
     using Clock = std::chrono::steady_clock;

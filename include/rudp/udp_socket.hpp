@@ -16,15 +16,17 @@ public:
     ~UdpChannel() override;
 
     // Listening endpoint on all interfaces; port 0 picks an ephemeral port.
-    // Replies go to the source of the most recently received datagram.
+    // Replies go to the source of the most recently received datagram until
+    // lock_peer() pins the peer.
     [[nodiscard]] static std::unique_ptr<UdpChannel> listen(std::uint16_t port, std::string& error);
-    // Endpoint that sends to a fixed remote host.
+    // Endpoint that sends to a fixed remote host and only accepts its datagrams.
     [[nodiscard]] static std::unique_ptr<UdpChannel> connect(const std::string& host,
                                                              std::uint16_t port,
                                                              std::string& error);
 
     void send(const Datagram& datagram) override;
     [[nodiscard]] std::optional<Datagram> receive(Micros timeout) override;
+    void lock_peer() override;
 
     [[nodiscard]] std::uint16_t local_port() const noexcept { return local_port_; }
 
