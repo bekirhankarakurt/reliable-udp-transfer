@@ -18,7 +18,7 @@ jobs:
           - {name: GCC ASan+UBSan, os: ubuntu-latest, cxx: g++, sanitize: "ON"}
           - {name: macOS Clang, os: macos-latest, cxx: clang++, sanitize: "OFF"}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Configure
         run: >
           cmake -S . -B build
