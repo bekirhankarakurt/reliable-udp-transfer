@@ -55,6 +55,7 @@ private:
             if (!packet || packet->header.type != PacketType::Syn) continue;
             const auto info = parse_syn(packet->payload);
             if (!info) continue;
+            channel_.lock_peer();  // only the SYN's sender may drive this session
             session_ = packet->header.session;
             syn_ = *info;
             return open_transfer();
@@ -68,7 +69,9 @@ private:
             reply(PacketType::SynAck, kFlagFailed, 0);
             return fail(Status::Rejected, "invalid transfer parameters from sender");
         }
-        const std::uint64_t chunks = (syn_.file_size + syn_.chunk_size - 1) / syn_.chunk_size;
+        // Rounded-up division that cannot wrap for sizes near 2^64.
+        const std::uint64_t chunks =
+            syn_.file_size / syn_.chunk_size + (syn_.file_size % syn_.chunk_size != 0 ? 1 : 0);
         if (chunks >= 0xFFFFFFFFULL) {
             reply(PacketType::SynAck, kFlagFailed, 0);
             return fail(Status::Rejected, "file too large");

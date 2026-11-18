@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The receiver now locks to the address of the SYN sender and the sender only accepts datagrams from the host it sends to, so a third host can no longer redirect ACKs or forge a cumulative ACK and FIN-ACK to fake a successful transfer.
+- A SYN whose file size makes the chunk count wrap is rejected instead of being treated as an empty, verified file.
+
 ## [1.0.0] - 2026-11-05
 
 ### Added
